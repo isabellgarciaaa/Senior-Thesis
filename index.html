@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thesis Dashboard — Invisible Barriers to Coastal Access</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --ocean:  #0c2d48;
+  --mid:    #145374;
+  --light:  #2e8bc0;
+  --sand:   #f5f0e1;
+  --sandy:  #d4c5a0;
+  --coral:  #e07a5f;
+  --green:  #3d9970;
+  --aqua:   #a8dadc;
+  --text:   #1d3557;
+  --muted:  #457b9d;
+  --bg:     #f4f6f8;
+  --white:  #ffffff;
+  --shadow: 0 3px 16px rgba(12,45,72,0.10);
+  --radius: 14px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); line-height:1.55; font-size:14px; }
+
+/* HEADER */
+.hdr { background:linear-gradient(130deg,var(--ocean),var(--mid),var(--light)); color:#fff; padding:1.8rem 2rem 1rem; text-align:center; }
+.hdr h1 { font-size:1.55rem; font-weight:800; margin-bottom:.3rem; }
+.hdr p  { opacity:.82; font-size:.88rem; }
+
+/* NAV */
+.nav { display:flex; gap:.3rem; background:var(--ocean); padding:.6rem 1.2rem .8rem; flex-wrap:wrap; justify-content:center; }
+.nav button {
+  background:rgba(255,255,255,.13); color:#fff; border:none;
+  padding:.45rem 1rem; border-radius:8px 8px 0 0; cursor:pointer;
+  font-size:.82rem; font-weight:700; transition:background .15s;
+}
+.nav button:hover { background:rgba(255,255,255,.28); }
+.nav button.active { background:var(--bg); color:var(--text); }
+
+/* LAYOUT */
+.wrap { max-width:1180px; margin:0 auto; padding:1.4rem; }
+.page { display:none; } .page.on { display:block; }
+
+/* CARDS */
+.card { background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:1.4rem; margin-bottom:1.4rem; }
+.card h2 { font-size:1rem; color:var(--mid); margin-bottom:.9rem; padding-bottom:.45rem; border-bottom:2px solid var(--aqua); }
+.grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(310px,1fr)); gap:1.4rem; }
+.grid3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:1.4rem; }
+
+/* STAT BOXES */
+.stat { background:#fff; border-radius:12px; padding:1rem 1.2rem; text-align:center; box-shadow:var(--shadow); border-top:4px solid var(--light); }
+.stat .n { font-size:2rem; font-weight:900; color:var(--mid); line-height:1.1; }
+.stat .l { font-size:.72rem; color:var(--muted); margin-top:.25rem; }
+
+/* CHART WRAPPER */
+.cw { position:relative; width:100%; height:360px; }
+
+/* PILLS */
+.pills { display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:1rem; align-items:center; }
+.pills label { font-weight:700; font-size:.8rem; color:var(--mid); }
+.pill {
+  padding:.3rem .8rem; border-radius:20px; border:2px solid var(--light);
+  background:#fff; cursor:pointer; font-size:.77rem; font-weight:700;
+  color:var(--mid); transition:all .15s; user-select:none;
+}
+.pill:hover { background:var(--aqua); }
+.pill.on { background:var(--mid); color:#fff; border-color:var(--mid); }
+
+/* QUOTE CARDS */
+.qcard { background:linear-gradient(135deg,#f0f7fa,#e8f4f8); border-left:4px solid var(--light); padding:.85rem 1.1rem; border-radius:0 10px 10px 0; margin-bottom:.65rem; }
+.qcard .qt { font-style:italic; color:var(--text); font-size:.9rem; }
+.qcard .by { margin-top:.35rem; font-size:.75rem; color:var(--muted); font-weight:700; }
+.tag { display:inline-block; background:var(--light); color:#fff; padding:.12rem .5rem; border-radius:10px; font-size:.68rem; font-weight:700; margin-left:.4rem; }
+.tag.absent { background:#ccc; color:#666; }
+
+/* SEARCH / SELECT */
+.row { display:flex; flex-wrap:wrap; gap:.7rem; margin-bottom:1rem; align-items:center; }
+.row input, .row select {
+  padding:.5rem .9rem; border:2px solid var(--aqua); border-radius:10px;
+  font-size:.85rem; background:#fff; color:var(--text); min-width:190px;
+}
+.row input { flex:1; min-width:250px; }
+.row input:focus, .row select:focus { outline:none; border-color:var(--light); }
+
+/* TABLE */
+.tbl { width:100%; border-collapse:collapse; font-size:.8rem; }
+.tbl th { background:var(--mid); color:#fff; padding:.55rem .7rem; text-align:left; position:sticky; top:0; }
+.tbl td { padding:.5rem .7rem; border-bottom:1px solid #e8e8e8; }
+.tbl tr:hover td { background:var(--aqua); }
+.yes { color:var(--green); font-weight:800; text-align:center; }
+.no  { color:#ddd; text-align:center; }
+.scroll { max-height:520px; overflow-y:auto; border-radius:10px; border:1px solid #e0e0e0; }
+
+/* PROFILE */
+.prof-grid { display:grid; grid-template-columns:1fr 1.6fr; gap:1.4rem; }
+.prof-kv { line-height:2; }
+.prof-kv strong { color:var(--mid); }
+.chip-row { display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.4rem; }
+.chip { background:var(--mid); color:#fff; padding:.2rem .65rem; border-radius:12px; font-size:.72rem; font-weight:700; }
+.chip.off { background:#e0e0e0; color:#888; }
+
+/* RESULT BOX */
+.result-box { background:var(--bg); border-radius:10px; padding:1rem; font-size:.87rem; line-height:1.9; margin-bottom:1rem; }
+.result-box strong { color:var(--mid); }
+
+/* FIND BOX */
+#findcount { font-size:.8rem; color:var(--muted); margin-bottom:.7rem; }
+
+@media(max-width:680px){
+  .grid2,.grid3,.prof-grid { grid-template-columns:1fr; }
+  .nav button { font-size:.73rem; padding:.35rem .65rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <h1>Invisible Barriers to Coastal Access at UCSB</h1>
+  <p>Interactive Thesis Dashboard &mdash; 12 Qualitative Interviews &mdash; ES Senior Thesis 2026</p>
+</div>
+
+<div class="nav">
+  <button class="active" onclick="go('overview',this)">Overview</button>
+  <button onclick="go('themes',this)">Theme Explorer</button>
+  <button onclick="go('profiles',this)">Participant Profiles</button>
+  <button onclick="go('compare',this)">Compare</button>
+  <button onclick="go('quotes',this)">Quote Bank</button>
+  <button onclick="go('query',this)">Query Builder</button>
+  <button onclick="go('matrix',this)">Full Matrix</button>
+</div>
+
+<div class="wrap">
+
+<!-- ==================== OVERVIEW ==================== -->
+<div class="page on" id="pg-overview">
+  <div class="grid3" id="statBoxes"></div>
+  <div class="grid2">
+    <div class="card"><h2>Theme Prevalence</h2><div class="cw"><canvas id="ch-bar"></canvas></div></div>
+    <div class="card"><h2>Barrier Categories (avg %)</h2><div class="cw"><canvas id="ch-radar"></canvas></div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h2>Beach Visit Frequency (n=12)</h2><div class="cw"><canvas id="ch-pie"></canvas></div></div>
+    <div class="card"><h2>Swimming Ability</h2><div class="cw"><canvas id="ch-swim"></canvas></div></div>
+  </div>
+  <div class="card" style="text-align:center;padding:1.6rem;">
+    <p style="font-size:1.1rem;color:var(--mid);font-weight:700;">Key Finding</p>
+    <p style="font-size:1.35rem;color:var(--coral);font-weight:800;margin-top:.4rem;">Physical proximity &ne; social belonging.</p>
+    <p style="margin-top:.5rem;color:var(--muted);">75% of participants visit the beach rarely or occasionally &mdash; despite living minutes from it.</p>
+  </div>
+</div>
+
+<!-- ==================== THEMES ==================== -->
+<div class="page" id="pg-themes">
+  <div class="card">
+    <h2>Select a Theme</h2>
+    <div class="pills" id="themePills"></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h2 id="thChartTitle">—</h2>
+      <div class="cw"><canvas id="ch-theme"></canvas></div>
+    </div>
+    <div class="card" style="overflow:hidden;">
+      <h2 id="thDetailTitle">Details</h2>
+      <div id="thDetails" style="max-height:380px;overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PROFILES ==================== -->
+<div class="page" id="pg-profiles">
+  <div class="card">
+    <h2>Select a Participant</h2>
+    <div class="pills" id="profPills"></div>
+  </div>
+  <div class="card" id="profCard">
+    <h2 id="profName">—</h2>
+    <div class="prof-grid" id="profContent"></div>
+  </div>
+  <div class="card">
+    <h2 id="profRadTitle">Theme Profile</h2>
+    <div class="cw"><canvas id="ch-profrad"></canvas></div>
+  </div>
+</div>
+
+<!-- ==================== COMPARE ==================== -->
+<div class="page" id="pg-compare">
+  <div class="card">
+    <h2>Compare Two Participants</h2>
+    <div class="row">
+      <select id="cmpA" onchange="renderCompare()"></select>
+      <span style="font-weight:800;color:var(--mid);">vs.</span>
+      <select id="cmpB" onchange="renderCompare()"></select>
+    </div>
+    <div class="cw"><canvas id="ch-cmp"></canvas></div>
+  </div>
+  <div class="grid2" id="cmpSummary"></div>
+</div>
+
+<!-- ==================== QUOTES ==================== -->
+<div class="page" id="pg-quotes">
+  <div class="card">
+    <h2>Quote Bank</h2>
+    <div class="row">
+      <input type="text" id="qSearch" placeholder="Search by keyword (swim, fear, white, family, ICE…)" oninput="filterQ()">
+      <select id="qTheme" onchange="filterQ()"><option value="">All Themes</option></select>
+      <select id="qPerson" onchange="filterQ()"><option value="">All Participants</option></select>
+    </div>
+    <div id="findcount"></div>
+    <div id="qList" style="max-height:580px;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- ==================== QUERY ==================== -->
+<div class="page" id="pg-query">
+  <div class="card">
+    <h2>Query Builder</h2>
+    <div class="row">
+      <select id="qType" onchange="handleQueryType()">
+        <option value="">— Select a question —</option>
+        <option value="who_theme">Who mentioned a specific theme?</option>
+        <option value="themes_for">What themes did one participant raise?</option>
+        <option value="shared">What do two participants share?</option>
+        <option value="most_barriers">Who faces the most barriers?</option>
+        <option value="swimmers">Swimming ability breakdown</option>
+        <option value="ice">ICE/immigration fear — who & quotes</option>
+        <option value="frequency">Beach frequency by childhood distance</option>
+        <option value="cooccur">Which themes co-occur most?</option>
+      </select>
+      <select id="qP1" onchange="runQuery()" style="display:none;"></select>
+      <select id="qP2" onchange="runQuery()" style="display:none;"></select>
+    </div>
+  </div>
+  <div class="card" id="qResult" style="display:none;">
+    <h2 id="qResTitle">Results</h2>
+    <div id="qResBody" class="result-box"></div>
+    <div class="cw" id="qChartWrap" style="display:none;"><canvas id="ch-query"></canvas></div>
+  </div>
+</div>
+
+<!-- ==================== MATRIX ==================== -->
+<div class="page" id="pg-matrix">
+  <div class="card">
+    <h2>Full Theme &times; Participant Matrix</h2>
+    <div class="scroll" id="matrixWrap"></div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+/* =====================================================
+   DATA — ALL KEYS ARE INDICES (0-11)
+===================================================== */
+const LABELS = [
+  'Participant 1','Participant 2','Participant 3','Participant 4',
+  'Participant 5','Participant 6','Participant 7','Participant 8',
+  'Participant 9','Participant 10','Participant 11','Participant 12'
+];
+
+// themes[name] = array of 0/1 for each participant (index 0–11)
+const THEMES = {
+  'Beach as White-Coded Space':       [1,1,1,1,1,1,1,1,1,0,1,1],
+  'Beach Tied to Wealth/Privilege':   [1,1,1,1,1,1,1,0,1,0,1,1],
+  'Time Poverty as Barrier':          [1,0,0,1,0,1,1,1,1,1,1,1],
+  'ICE/Immigration Fear':             [1,1,0,1,0,1,1,1,1,0,1,1],
+  'Beach as Mental Health/Reflection':[1,1,1,1,1,1,1,1,1,1,1,1],
+  'Lack of Swimming Ability':         [1,0,0,0,0,1,1,0,1,0,1,1],
+  'Body Image/Appearance Pressure':   [1,0,1,1,1,1,1,1,0,0,1,1],
+  'Safety/Lighting/Gender':           [1,0,1,1,1,0,1,1,1,0,0,1],
+  'Family/Intergenerational Patterns':[1,1,1,1,1,1,1,1,1,1,1,1],
+  'Feeling Watched/Out of Place':     [1,1,1,1,1,1,1,0,1,0,1,0],
+  'Cultural Modesty Norms':           [0,0,0,1,1,1,1,0,0,0,1,1],
+  'Beach as Luxury (Growing Up)':     [0,0,1,1,0,1,1,0,1,0,1,1],
+  'Party Culture as Barrier':         [1,0,1,1,1,0,0,0,0,1,0,0],
+  'UCSB HSI Critique':                [1,0,1,1,0,0,1,1,1,1,0,1],
+  'Representation Matters':           [1,1,0,0,1,0,1,1,1,0,1,1],
+};
+const TNAMES = Object.keys(THEMES);
+
+// profiles[i] matches LABELS[i]
+const PROFILES = [
+  {year:'4th',major:'Economics',bg:'Mexican, Van Nuys (LA)',dist:'40 min',swim:'No',pswim:'Mom yes (basic)',freq:'~1x/month',origin:'Mexico (Jalisco)',note:'Works 3 jobs; links racial harassment in IV directly to beach exclusion; beach = solitary decompression'},
+  {year:'2nd',major:'Pre-Bio / Pre-Med',bg:'Salvadoran/Guatemalan, Irvine',dist:'10 min',swim:'Yes',pswim:'Yes',freq:'1–2x/quarter',origin:'El Salvador & Guatemala',note:'Beach = social/group space; stigma of going alone as a man; ICE fear directed at family back home'},
+  {year:'4th',major:'History of Public Policy',bg:'Mexican, Carpinteria — nontraditional student, mother of 4',dist:'Very close',swim:'Basic',pswim:'No',freq:'1–2x/week (summer)',origin:'Mexico',note:'Beach tied to sobriety/recovery meetings during COVID; son who presents white welcomed into surf culture while darker sons are not'},
+  {year:'4th',major:'Sociology',bg:'Mexican (Zacatecas), Lancaster',dist:'1.5–2 hrs',swim:'Basic (float)',pswim:'Dad yes, Mom no',freq:'1–2x/quarter',origin:'Mexico (Zacatecas)',note:'Lives 1 min from beach but rarely goes; epilepsy added fear of water; beach was a luxury growing up'},
+  {year:'3rd',major:'Environmental Studies & Spanish',bg:'Korean/Peruvian, grew up in South Korea then OC',dist:'Variable',swim:'Basic',pswim:'Yes',freq:'~1x/week',origin:'South Korea & Peru',note:'Multicultural identity; feels she must surf to "belong" at UCSB beaches; beach = mental health reset'},
+  {year:'3rd',major:'Sociology',bg:'Oaxacan, Santa Maria',dist:'20 min (to Pismo)',swim:'Float only',pswim:'No',freq:'1–2x/year',origin:'Mexico (Oaxaca)',note:'Entire family undocumented; custody plan prepared twice; prefers crowded beaches for safety; ICE fear is most acute of all participants'},
+  {year:'1st',major:'Psychology',bg:'Mexican (Guanajuato), Soledad',dist:'30–45 min',swim:'No',pswim:'No',freq:'2–3x/month (cliffs only)',origin:'Mexico (Guanajuato)',note:'Felt ashamed at beach due to whiteness; would "put on a mask"; first time in pool was when no one else was around'},
+  {year:'4th',major:'Chicana/o Studies',bg:'Mexican (Puebla/Guanajuato), Santa Monica',dist:'10 min',swim:'Yes',pswim:'Dad yes, Mom no',freq:'~1x/quarter',origin:'Mexico (Puebla & Guanajuato)',note:'Ocean = sacred/emotional; cries at beach intentionally; dad wants to return to Mexico; parents undocumented'},
+  {year:'3rd',major:'Spanish',bg:'Mexican, grew up in mountains of Mexico',dist:'8 hrs (childhood)',swim:'Limited',pswim:'Dad yes',freq:'Runs past daily; 1–2x/quarter on sand',origin:'Mexico (mountain region)',note:'Beach went from "not for us" → UCSB backyard; feels watched when with family; "walking on eggshells"'},
+  {year:'4th',major:'Communication',bg:'Mexican/mixed (white-presenting), San Jose',dist:'30 min',swim:'Yes',pswim:'Yes',freq:'~1x/week',origin:'Mexico & European',note:'Most positive beach relationship overall; openly acknowledges white-presenting privilege; boyfriend faces fear she does not'},
+  {year:'3rd',major:'Sociology & History of Public Policy',bg:'Mexican, La Puente (LA County)',dist:'1–2 hrs',swim:'No',pswim:'No',freq:'1–2x/year',origin:'Mexico (rural)',note:'Beach knowledge = cultural capital; OC roommates had entirely different relationship to coast; shifted from shorts to bikinis at UCSB'},
+  {year:'4th',major:'Social Studies / Spanish',bg:'Mexican/Indigenous, Glendale',dist:'1 hr',swim:'No',pswim:'Dad yes, Mom no',freq:'~1x/quarter',origin:'Mexico (Indigenous community)',note:'Beach = place to reflect on how far she has come; first in family to leave home; almost drowned as a child; mom says Mexico beaches are better'},
+];
+
+const QUOTES = [
+  {t:"I felt ashamed of being there because there weren't many people of color.",w:6,th:"Beach as White-Coded Space"},
+  {t:"I think just looking at my environment made me feel intimidated about actually going to the beach.",w:6,th:"Beach as White-Coded Space"},
+  {t:"I'd have to put on a mask to be similar to them so I wouldn't feel embarrassed about my identity.",w:6,th:"Feeling Watched/Out of Place"},
+  {t:"Being more myself would look like wearing shorts and a random T-shirt... I'd probably speak Spanish too because talking in Spanish is way funnier.",w:6,th:"Cultural Modesty Norms"},
+  {t:"I can literally see the pool from my dorm window, and it's just straight-up white people.",w:6,th:"Beach as White-Coded Space"},
+  {t:"When it was the first time I got into a pool, it was when nobody was there — just me and my friends.",w:6,th:"Representation Matters"},
+  {t:"The ocean doesn't judge anyone.",w:7,th:"Beach as Mental Health/Reflection"},
+  {t:"I feel like the ocean holds so many secrets and stories.",w:7,th:"Beach as Mental Health/Reflection"},
+  {t:"I would consider it sacred for sure.",w:7,th:"Beach as Mental Health/Reflection"},
+  {t:"I express a lot of my gratitude through tears... I go to the beach and cry everything out.",w:7,th:"Beach as Mental Health/Reflection"},
+  {t:"If I don't feel content with the level of productivity I've done so far, I feel like I don't deserve to go to the beach.",w:7,th:"Time Poverty as Barrier"},
+  {t:"We don't even go to Walmart anymore.",w:5,th:"ICE/Immigration Fear"},
+  {t:"We came across this white car, green stripes, and we didn't say anything. My mom and I — we just saw it. It was just an agriculture card. But just the colors gave us fear.",w:5,th:"ICE/Immigration Fear"},
+  {t:"None of us know how to swim. We would only go waist deep.",w:5,th:"Lack of Swimming Ability"},
+  {t:"I go when I'm sad... like when I fail a midterm.",w:5,th:"Beach as Mental Health/Reflection"},
+  {t:"Here it's very different... kind of lonely. A lot of people don't take advantage of it, including myself.",w:5,th:"Beach as Luxury (Growing Up)"},
+  {t:"I thought I'd go every weekend... that didn't happen.",w:5,th:"Time Poverty as Barrier"},
+  {t:"I don't feel comfortable wearing a bikini. It's always like shorts, some sandals, and a little top. And that's just so normalized.",w:5,th:"Cultural Modesty Norms"},
+  {t:"Getting connected to the beach is a big thing, but you have to have money, and you also have to look a certain way.",w:2,th:"Beach Tied to Wealth/Privilege"},
+  {t:"You start believing that those public spaces are places you don't belong in.",w:2,th:"Feeling Watched/Out of Place"},
+  {t:"This stuff is never discussed.",w:2,th:"Feeling Watched/Out of Place"},
+  {t:"This is not made for a Latina mom.",w:2,th:"Beach as White-Coded Space"},
+  {t:"They can say that they are, but they're not. You know who makes it a Hispanic-Serving Institution? The students.",w:2,th:"UCSB HSI Critique"},
+  {t:"Two meetings that helped me stay sober during the pandemic were at the beach.",w:2,th:"Beach as Mental Health/Reflection"},
+  {t:"I ask the beach, can I be here today?",w:2,th:"Beach as Mental Health/Reflection"},
+  {t:"When my other boys tried to integrate into that Santa Barbara surfing culture, they don't feel welcomed.",w:2,th:"Beach as White-Coded Space"},
+  {t:"There's no lighting. It becomes dangerous ground, a predatory environment.",w:2,th:"Safety/Lighting/Gender"},
+  {t:"We kind of isolated ourselves from doing stuff we used to do just for our safety.",w:1,th:"ICE/Immigration Fear"},
+  {t:"If I went alone, I'd probably want it to be empty because I don't want to seem weird being alone at the beach.",w:1,th:"Feeling Watched/Out of Place"},
+  {t:"There were houses near the beach, so you definitely expected richer people and more white people.",w:1,th:"Beach Tied to Wealth/Privilege"},
+  {t:"Huntington Beach... my mom told me most of the people over there are racist.",w:1,th:"Beach as White-Coded Space"},
+  {t:"If you don't have the time to even relax and be on your phone, you're not going to have time to go to the beach.",w:0,th:"Time Poverty as Barrier"},
+  {t:"I have three jobs and I'm also applying for a fourth. Not because I just want it, but because I need it.",w:0,th:"Time Poverty as Barrier"},
+  {t:"I don't tend to see that many Black or Asian people, or more visibly Indigenous Hispanics there.",w:0,th:"Beach as White-Coded Space"},
+  {t:"I've been called slurs... I've had things thrown at me. You'd be surprised what goes on on those streets.",w:0,th:"Feeling Watched/Out of Place"},
+  {t:"Everyone feels they need to look a certain way, so they try to look that way, but that contributes to the problem.",w:0,th:"Body Image/Appearance Pressure"},
+  {t:"We're all connected through the ocean.",w:0,th:"Beach as Mental Health/Reflection"},
+  {t:"The beach reminds me that things that once felt impossible can become real.",w:8,th:"Beach as Mental Health/Reflection"},
+  {t:"It feels like walking on eggshells. Like, you can use the space, but you're being watched.",w:8,th:"Feeling Watched/Out of Place"},
+  {t:"My family left Mexico to feel safer, and now it doesn't feel safe here either.",w:8,th:"ICE/Immigration Fear"},
+  {t:"When I'm alone, it's like free therapy.",w:8,th:"Beach as Mental Health/Reflection"},
+  {t:"Growing up, it felt like a luxury. Now it feels like a calm space that I'm privileged to be near.",w:8,th:"Beach as Luxury (Growing Up)"},
+  {t:"In my family, our bathing suit was basically shorts and a baggy T-shirt. That was the bikini.",w:3,th:"Cultural Modesty Norms"},
+  {t:"I expected it to be predominantly white because beach areas tend to be richer areas. So my expectations were low.",w:3,th:"Beach Tied to Wealth/Privilege"},
+  {t:"Being an HSI doesn't really mean anything to them because they don't actually do anything to help us.",w:3,th:"UCSB HSI Critique"},
+  {t:"The campus has not really done anything to protect us or notify us when ICE is present.",w:3,th:"ICE/Immigration Fear"},
+  {t:"As a young woman running alone, that's one of the biggest hazards I think about.",w:3,th:"Safety/Lighting/Gender"},
+  {t:"I always associated the beach with people who are in the middle class or wealthier.",w:11,th:"Beach Tied to Wealth/Privilege"},
+  {t:"I don't know how white people do it. They just get in and out with chanclas.",w:11,th:"Beach as White-Coded Space"},
+  {t:"The beach reminds me of how far I've come. My brown, first-gen self is here.",w:11,th:"Beach as Mental Health/Reflection"},
+  {t:"My mom says the beaches here are not the same as in Mexico.",w:11,th:"Family/Intergenerational Patterns"},
+  {t:"I was sitting on the wet sand and a big wave came and pulled me in... my dad pulled me out.",w:11,th:"Lack of Swimming Ability"},
+  {t:"It was really rare and it was like a big deal... like a flex.",w:10,th:"Beach as Luxury (Growing Up)"},
+  {t:"I wouldn't really see Latino families... it was often white families with a completely different lifestyle.",w:10,th:"Beach as White-Coded Space"},
+  {t:"I didn't really wear bathing suits growing up. Now everyone wears them.",w:10,th:"Body Image/Appearance Pressure"},
+  {t:"Their relationship to the beach was completely different from mine.",w:10,th:"Beach as Luxury (Growing Up)"},
+  {t:"My name is connected to water — it means the foam you see on the waves.",w:4,th:"Family/Intergenerational Patterns"},
+  {t:"Sometimes I feel like I have to be into surfing to fully enjoy the beaches here.",w:4,th:"Beach as White-Coded Space"},
+  {t:"Looking at the ocean makes me think that even though my problem feels really big, it's actually not that big.",w:9,th:"Beach as Mental Health/Reflection"},
+  {t:"He's shared with me how unsafe he feels in public spaces because of the administration targeting Latino individuals.",w:9,th:"ICE/Immigration Fear"},
+  {t:"My dad was really scared and wouldn't go out. My mom pushes herself because she's the one working.",w:6,th:"ICE/Immigration Fear"},
+  {t:"The resources exist, but they're very hidden.",w:6,th:"UCSB HSI Critique"},
+];
+
+/* =====================================================
+   COLOURS
+===================================================== */
+const PAL = ['#0c2d48','#145374','#2e8bc0','#3d9970','#e07a5f','#6c5b7b','#00b4d8','#f4845f','#457b9d','#a8dadc','#264653','#e9c46a'];
+
+/* =====================================================
+   CHART REGISTRY
+===================================================== */
+const CHS = {};
+function kill(id){ if(CHS[id]){ CHS[id].destroy(); delete CHS[id]; } }
+
+/* =====================================================
+   TAB NAV
+===================================================== */
+function go(id, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* =====================================================
+   OVERVIEW
+===================================================== */
+function buildOverview(){
+  // Stats
+  const stats = [
+    {n:'12', l:'Interviews conducted'},
+    {n:'15', l:'Themes identified'},
+    {n:'100%',l:'Value beach for mental health'},
+    {n:'92%', l:'See beach as white-coded space'},
+    {n:'75%', l:'Affected by ICE fear'},
+    {n:'50%', l:'Cannot swim or have limited ability'},
+  ];
+  document.getElementById('statBoxes').innerHTML = stats.map(s=>
+    `<div class="stat"><div class="n">${s.n}</div><div class="l">${s.l}</div></div>`
+  ).join('');
+
+  // Bar chart — sorted by count
+  const sorted = TNAMES.map(n=>({n, c:THEMES[n].reduce((a,b)=>a+b,0)})).sort((a,b)=>b.c-a.c);
+  kill('ch-bar');
+  CHS['ch-bar'] = new Chart(document.getElementById('ch-bar'),{
+    type:'bar',
+    data:{
+      labels:sorted.map(s=>s.n),
+      datasets:[{data:sorted.map(s=>s.c), backgroundColor:PAL.concat(PAL), borderRadius:5, barThickness:14}]
+    },
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'/12 participants'}}},
+      scales:{x:{max:13,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f0f0f0'}},
+              y:{ticks:{font:{size:10}}}}}
+  });
+
+  // Radar
+  const cats = {
+    'Structural':    ['Time Poverty as Barrier','Lack of Swimming Ability','Safety/Lighting/Gender','Beach as Luxury (Growing Up)'],
+    'Social/Cultural':['Beach as White-Coded Space','Body Image/Appearance Pressure','Cultural Modesty Norms','Feeling Watched/Out of Place'],
+    'Political':     ['ICE/Immigration Fear','UCSB HSI Critique'],
+    'Environmental': ['Party Culture as Barrier','Beach Tied to Wealth/Privilege'],
+    'Positive':      ['Beach as Mental Health/Reflection','Family/Intergenerational Patterns','Representation Matters'],
+  };
+  const cVals = Object.entries(cats).map(([,ts])=>{
+    const tot = ts.reduce((s,t)=>s+THEMES[t].reduce((a,b)=>a+b,0),0);
+    return Math.round(tot/(ts.length*12)*100);
+  });
+  kill('ch-radar');
+  CHS['ch-radar'] = new Chart(document.getElementById('ch-radar'),{
+    type:'radar',
+    data:{labels:Object.keys(cats),datasets:[{data:cVals,fill:true,
+      backgroundColor:'rgba(20,83,116,0.2)',borderColor:'#145374',pointBackgroundColor:'#145374',pointRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{r:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{size:10}}}},
+      plugins:{legend:{display:false}}}
+  });
+
+  // Pie
+  kill('ch-pie');
+  CHS['ch-pie'] = new Chart(document.getElementById('ch-pie'),{
+    type:'doughnut',
+    data:{
+      labels:['Rarely (1–2x/year) — 4 participants','Occasional (1–2x/quarter) — 5 participants','Regular (weekly+) — 3 participants'],
+      datasets:[{data:[4,5,3],backgroundColor:['#e07a5f','#d4c5a0','#3d9970'],borderWidth:3,borderColor:'#fff'}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}
+  });
+
+  // Swim bar
+  kill('ch-swim');
+  CHS['ch-swim'] = new Chart(document.getElementById('ch-swim'),{
+    type:'bar',
+    data:{
+      labels:['Cannot Swim','Basic / Limited','Can Swim'],
+      datasets:[
+        {label:'Participant',data:[5,4,3],backgroundColor:['#e07a5f','#d4c5a0','#3d9970'],borderRadius:6},
+        {label:'At least one parent swims',data:[2,3,3],backgroundColor:['rgba(224,122,95,.35)','rgba(212,197,160,.35)','rgba(61,153,112,.35)'],borderRadius:6},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{y:{beginAtZero:true,ticks:{stepSize:1}}},
+      plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}
+  });
+}
+
+/* =====================================================
+   THEME EXPLORER
+===================================================== */
+let curTheme = TNAMES[0];
+function buildThemePills(){
+  const el = document.getElementById('themePills');
+  el.innerHTML = '';
+  TNAMES.forEach(t=>{
+    const b = document.createElement('button');
+    b.className = 'pill'+(t===curTheme?' on':'');
+    b.textContent = t;
+    b.onclick = ()=>selectTheme(t);
+    el.appendChild(b);
+  });
+}
+function selectTheme(t){
+  curTheme = t;
+  document.querySelectorAll('#themePills .pill').forEach(p=>p.classList.toggle('on',p.textContent===t));
+  const data = THEMES[t];
+  const count = data.reduce((a,b)=>a+b,0);
+  document.getElementById('thChartTitle').textContent = `${t} — ${count}/12 participants`;
+  kill('ch-theme');
+  CHS['ch-theme'] = new Chart(document.getElementById('ch-theme'),{
+    type:'bar',
+    data:{labels:LABELS,
+      datasets:[{data:data,backgroundColor:data.map(v=>v?'#145374':'#e0e0e0'),borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{y:{display:false},x:{ticks:{font:{size:10}}}},
+      plugins:{legend:{display:false}}}
+  });
+  const qs = QUOTES.filter(q=>q.th===t);
+  const yes = LABELS.filter((_,i)=>data[i]);
+  const no  = LABELS.filter((_,i)=>!data[i]);
+  let html = `<p style="margin-bottom:.5rem"><strong style="color:var(--mid)">Present in ${count} participants:</strong> ${yes.join(', ')}</p>`;
+  if(no.length) html += `<p style="margin-bottom:.7rem;color:#aaa"><strong>Not mentioned:</strong> ${no.join(', ')}</p>`;
+  html += '<hr style="border:none;border-top:1px solid #e8e8e8;margin:.7rem 0">';
+  if(qs.length){
+    html += `<p style="font-weight:700;margin-bottom:.5rem">Quotes (${qs.length}):</p>`;
+    qs.forEach(q=>{ html += qCard(q); });
+  } else { html += '<p style="color:#aaa">No quotes tagged to this theme.</p>'; }
+  document.getElementById('thDetails').innerHTML = html;
+  document.getElementById('thDetailTitle').textContent = 'Details: '+t;
+}
+
+/* =====================================================
+   PARTICIPANT PROFILES
+===================================================== */
+let curProf = 0;
+function buildProfPills(){
+  const el = document.getElementById('profPills');
+  el.innerHTML = '';
+  LABELS.forEach((l,i)=>{
+    const b = document.createElement('button');
+    b.className = 'pill'+(i===curProf?' on':'');
+    b.textContent = l;
+    b.onclick = ()=>selectProf(i);
+    el.appendChild(b);
+  });
+}
+function selectProf(i){
+  curProf = i;
+  document.querySelectorAll('#profPills .pill').forEach((p,j)=>p.classList.toggle('on',j===i));
+  const pr = PROFILES[i];
+  const has = TNAMES.filter(t=>THEMES[t][i]);
+  const not = TNAMES.filter(t=>!THEMES[t][i]);
+  const qs  = QUOTES.filter(q=>q.w===i);
+  document.getElementById('profName').textContent = LABELS[i];
+  let left = `<div class="prof-kv">
+    <strong>Year:</strong> ${pr.year}<br>
+    <strong>Major:</strong> ${pr.major}<br>
+    <strong>Background:</strong> ${pr.bg}<br>
+    <strong>Parents' Origin:</strong> ${pr.origin}<br>
+    <strong>Distance from Beach (childhood):</strong> ${pr.dist}<br>
+    <strong>Swims:</strong> ${pr.swim}<br>
+    <strong>Parents swim:</strong> ${pr.pswim}<br>
+    <strong>Beach Frequency:</strong> ${pr.freq}<br>
+    <strong style="color:var(--coral)">Key Insight:</strong> <em>${pr.note}</em>
+  </div>`;
+  let right = `<div>
+    <p style="font-weight:700;margin-bottom:.4rem">Themes present (${has.length}/${TNAMES.length}):</p>
+    <div class="chip-row">${has.map(t=>`<span class="chip">${t}</span>`).join('')}</div>
+    <div class="chip-row">${not.map(t=>`<span class="chip off">${t}</span>`).join('')}</div>
+    ${qs.length?`<p style="font-weight:700;margin:1rem 0 .4rem">Quotes (${qs.length}):</p>${qs.map(q=>qCard(q)).join('')}`:''}
+  </div>`;
+  document.getElementById('profContent').innerHTML = left+right;
+
+  kill('ch-profrad');
+  CHS['ch-profrad'] = new Chart(document.getElementById('ch-profrad'),{
+    type:'radar',
+    data:{
+      labels:TNAMES.map(t=>t.length>24?t.slice(0,22)+'…':t),
+      datasets:[{data:TNAMES.map(t=>THEMES[t][i]),fill:true,
+        backgroundColor:'rgba(20,83,116,0.22)',borderColor:'#145374',
+        pointBackgroundColor:TNAMES.map(t=>THEMES[t][i]?'#145374':'#e0e0e0'),pointRadius:5}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{r:{beginAtZero:true,max:1,ticks:{display:false}}},
+      plugins:{legend:{display:false}}}
+  });
+  document.getElementById('profRadTitle').textContent = LABELS[i]+' — Theme Profile';
+}
+
+/* =====================================================
+   COMPARE
+===================================================== */
+function buildCompareSelects(){
+  ['cmpA','cmpB'].forEach((id,off)=>{
+    const sel = document.getElementById(id);
+    sel.innerHTML = LABELS.map((l,i)=>`<option value="${i}"${i===off?'selected':''}>${l}</option>`).join('');
+  });
+  renderCompare();
+}
+function renderCompare(){
+  const ia = +document.getElementById('cmpA').value;
+  const ib = +document.getElementById('cmpB').value;
+  kill('ch-cmp');
+  CHS['ch-cmp'] = new Chart(document.getElementById('ch-cmp'),{
+    type:'radar',
+    data:{
+      labels:TNAMES.map(t=>t.length>20?t.slice(0,18)+'…':t),
+      datasets:[
+        {label:LABELS[ia],data:TNAMES.map(t=>THEMES[t][ia]),fill:true,backgroundColor:'rgba(20,83,116,.2)',borderColor:'#145374',pointBackgroundColor:'#145374',pointRadius:4},
+        {label:LABELS[ib],data:TNAMES.map(t=>THEMES[t][ib]),fill:true,backgroundColor:'rgba(224,122,95,.2)',borderColor:'#e07a5f',pointBackgroundColor:'#e07a5f',pointRadius:4}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{r:{beginAtZero:true,max:1,ticks:{display:false}}},
+      plugins:{legend:{position:'bottom'}}}
+  });
+  const shared = TNAMES.filter(t=>THEMES[t][ia]&&THEMES[t][ib]);
+  const onlyA  = TNAMES.filter(t=>THEMES[t][ia]&&!THEMES[t][ib]);
+  const onlyB  = TNAMES.filter(t=>!THEMES[t][ia]&&THEMES[t][ib]);
+  document.getElementById('cmpSummary').innerHTML =
+    `<div class="card"><h2>Shared themes (${shared.length})</h2><div class="chip-row">${shared.map(t=>`<span class="chip">${t}</span>`).join('')||'<em style="color:#aaa">None</em>'}</div></div>
+     <div class="card"><h2>Differences</h2>
+       <p style="margin-bottom:.5rem"><strong style="color:#145374">${LABELS[ia]} only (${onlyA.length}):</strong> ${onlyA.join(', ')||'—'}</p>
+       <p><strong style="color:#e07a5f">${LABELS[ib]} only (${onlyB.length}):</strong> ${onlyB.join(', ')||'—'}</p>
+     </div>`;
+}
+
+/* =====================================================
+   QUOTE BANK
+===================================================== */
+function buildQuoteFilters(){
+  const qt = document.getElementById('qTheme');
+  TNAMES.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; qt.appendChild(o); });
+  const qp = document.getElementById('qPerson');
+  LABELS.forEach((l,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=l; qp.appendChild(o); });
+  filterQ();
+}
+function filterQ(){
+  const s  = document.getElementById('qSearch').value.toLowerCase();
+  const th = document.getElementById('qTheme').value;
+  const pi = document.getElementById('qPerson').value;
+  const out = QUOTES.filter(q=>{
+    if(s && !q.t.toLowerCase().includes(s)) return false;
+    if(th && q.th!==th) return false;
+    if(pi!=='' && q.w!==+pi) return false;
+    return true;
+  });
+  document.getElementById('findcount').textContent = `Showing ${out.length} of ${QUOTES.length} quotes`;
+  document.getElementById('qList').innerHTML = out.length
+    ? out.map(q=>qCard(q)).join('')
+    : '<p style="color:#aaa;padding:1rem">No quotes match your search.</p>';
+}
+
+/* =====================================================
+   QUERY BUILDER
+===================================================== */
+function handleQueryType(){
+  const t  = document.getElementById('qType').value;
+  const p1 = document.getElementById('qP1');
+  const p2 = document.getElementById('qP2');
+  p1.style.display = 'none'; p2.style.display = 'none';
+  p1.innerHTML = ''; p2.innerHTML = '';
+
+  if(['who_theme','cooccur'].includes(t)){
+    p1.style.display = '';
+    TNAMES.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; p1.appendChild(o); });
+  }
+  if(t==='themes_for'){
+    p1.style.display = '';
+    LABELS.forEach((l,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=l; p1.appendChild(o); });
+  }
+  if(t==='shared'){
+    p1.style.display = ''; p2.style.display = '';
+    LABELS.forEach((l,i)=>{
+      const a=document.createElement('option'); a.value=i; a.textContent=l; if(i===0)a.selected=true; p1.appendChild(a);
+      const b=document.createElement('option'); b.value=i; b.textContent=l; if(i===1)b.selected=true; p2.appendChild(b);
+    });
+  }
+  if(t) runQuery();
+}
+
+let qch = null;
+function runQuery(){
+  const t   = document.getElementById('qType').value;
+  const v1  = document.getElementById('qP1').value;
+  const v2  = document.getElementById('qP2').value;
+  const res = document.getElementById('qResult');
+  const body= document.getElementById('qResBody');
+  const cw  = document.getElementById('qChartWrap');
+  kill('ch-query');
+  if(!t){ res.style.display='none'; return; }
+  res.style.display = '';
+  cw.style.display  = 'none';
+  body.innerHTML    = '';
+
+  if(t==='who_theme'){
+    const d   = THEMES[v1];
+    const yes = LABELS.filter((_,i)=>d[i]);
+    const no  = LABELS.filter((_,i)=>!d[i]);
+    document.getElementById('qResTitle').textContent = 'Who mentioned: '+v1;
+    body.innerHTML = `<strong style="color:var(--green)">Yes (${yes.length}):</strong> ${yes.join(', ')}<br>
+      <strong style="color:#aaa">No (${no.length}):</strong> ${no.join(', ')}`;
+    cw.style.display='';
+    CHS['ch-query'] = new Chart(document.getElementById('ch-query'),{
+      type:'bar',data:{labels:LABELS,datasets:[{data:d,backgroundColor:d.map(v=>v?'#145374':'#e0e0e0'),borderRadius:5}]},
+      options:{responsive:true,maintainAspectRatio:false,scales:{y:{display:false},x:{ticks:{font:{size:10}}}},plugins:{legend:{display:false}}}
+    });
+  }
+  else if(t==='themes_for'){
+    const i   = +v1;
+    const has = TNAMES.filter(n=>THEMES[n][i]);
+    const not = TNAMES.filter(n=>!THEMES[n][i]);
+    document.getElementById('qResTitle').textContent = 'Themes for '+LABELS[i];
+    body.innerHTML = `<strong>Present (${has.length}):</strong> ${has.join(', ')}<br>
+      <strong style="color:#aaa">Absent (${not.length}):</strong> ${not.join(', ')}`;
+  }
+  else if(t==='shared'){
+    const ia = +v1; const ib = +v2;
+    const sh = TNAMES.filter(n=>THEMES[n][ia]&&THEMES[n][ib]);
+    const oa = TNAMES.filter(n=>THEMES[n][ia]&&!THEMES[n][ib]);
+    const ob = TNAMES.filter(n=>!THEMES[n][ia]&&THEMES[n][ib]);
+    document.getElementById('qResTitle').textContent = LABELS[ia]+' vs. '+LABELS[ib];
+    body.innerHTML = `<strong>Shared (${sh.length}):</strong> ${sh.join(', ')||'—'}<br>
+      <strong style="color:#145374">Only ${LABELS[ia]} (${oa.length}):</strong> ${oa.join(', ')||'—'}<br>
+      <strong style="color:#e07a5f">Only ${LABELS[ib]} (${ob.length}):</strong> ${ob.join(', ')||'—'}`;
+  }
+  else if(t==='most_barriers'){
+    const bt = ['Beach as White-Coded Space','Beach Tied to Wealth/Privilege','Time Poverty as Barrier','ICE/Immigration Fear',
+                'Lack of Swimming Ability','Body Image/Appearance Pressure','Safety/Lighting/Gender',
+                'Cultural Modesty Norms','Feeling Watched/Out of Place','Beach as Luxury (Growing Up)','Party Culture as Barrier'];
+    const counts = LABELS.map((l,i)=>({l,c:bt.filter(n=>THEMES[n][i]).length})).sort((a,b)=>b.c-a.c);
+    document.getElementById('qResTitle').textContent = 'Barrier count by participant';
+    body.innerHTML = counts.map(c=>`<strong>${c.l}:</strong> ${c.c}/${bt.length} barriers`).join('<br>');
+    cw.style.display='';
+    CHS['ch-query'] = new Chart(document.getElementById('ch-query'),{
+      type:'bar',
+      data:{labels:counts.map(c=>c.l),datasets:[{data:counts.map(c=>c.c),
+        backgroundColor:counts.map(c=>c.c>=8?'#e07a5f':c.c>=6?'#d4c5a0':'#3d9970'),borderRadius:6}]},
+      options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{stepSize:1}}},plugins:{legend:{display:false}}}
+    });
+  }
+  else if(t==='swimmers'){
+    const cannot= LABELS.filter((_,i)=>PROFILES[i].swim==='No');
+    const basic = LABELS.filter((_,i)=>['Basic','Basic (float)','Float only','Limited'].includes(PROFILES[i].swim));
+    const can   = LABELS.filter((_,i)=>PROFILES[i].swim==='Yes');
+    document.getElementById('qResTitle').textContent = 'Swimming ability';
+    body.innerHTML = `<strong style="color:#e07a5f">Cannot swim (${cannot.length}):</strong> ${cannot.join(', ')}<br>
+      <strong style="color:#d4a520">Basic/Limited (${basic.length}):</strong> ${basic.join(', ')}<br>
+      <strong style="color:#3d9970">Can swim (${can.length}):</strong> ${can.join(', ')}`;
+  }
+  else if(t==='ice'){
+    const d   = THEMES['ICE/Immigration Fear'];
+    const yes = LABELS.filter((_,i)=>d[i]);
+    const qs  = QUOTES.filter(q=>q.th==='ICE/Immigration Fear');
+    document.getElementById('qResTitle').textContent = 'ICE/Immigration Fear';
+    body.innerHTML = `<strong>Mentioned by (${yes.length}/12):</strong> ${yes.join(', ')}<br><br>`
+      + qs.map(q=>qCard(q)).join('');
+  }
+  else if(t==='frequency'){
+    document.getElementById('qResTitle').textContent = 'Beach frequency vs. childhood distance';
+    body.innerHTML = '<table class="tbl"><tr><th>Participant</th><th>Distance Growing Up</th><th>Current Frequency at UCSB</th></tr>'
+      + LABELS.map((l,i)=>`<tr><td><strong>${l}</strong></td><td>${PROFILES[i].dist}</td><td>${PROFILES[i].freq}</td></tr>`).join('')
+      + '</table>';
+  }
+  else if(t==='cooccur'){
+    const base = THEMES[v1];
+    const co = TNAMES.filter(n=>n!==v1).map(n=>{
+      const both = base.filter((_,i)=>base[i]&&THEMES[n][i]).length;
+      return {n,both};
+    }).sort((a,b)=>b.both-a.both);
+    document.getElementById('qResTitle').textContent = 'Co-occurrence with: '+v1;
+    body.innerHTML = co.map(c=>`<strong>${c.n}:</strong> ${c.both} shared participants`).join('<br>');
+    cw.style.display='';
+    CHS['ch-query'] = new Chart(document.getElementById('ch-query'),{
+      type:'bar',
+      data:{labels:co.map(c=>c.n.length>22?c.n.slice(0,20)+'…':c.n),datasets:[{data:co.map(c=>c.both),backgroundColor:'#145374',borderRadius:5}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{beginAtZero:true,ticks:{stepSize:1}}},plugins:{legend:{display:false}}}
+    });
+  }
+}
+
+/* =====================================================
+   FULL MATRIX
+===================================================== */
+function buildMatrix(){
+  // Sort participant indices smallest → biggest total theme count
+  const sortedIdx = LABELS.map((_,i)=>i)
+    .sort((a,b)=>TNAMES.filter(t=>THEMES[t][a]).length - TNAMES.filter(t=>THEMES[t][b]).length);
+
+  let h = '<table class="tbl"><thead><tr><th>Theme</th>';
+  sortedIdx.forEach(i=>h+=`<th style="writing-mode:vertical-lr;min-width:28px;padding:.4rem .2rem;font-size:.7rem">${LABELS[i]}</th>`);
+  h+='<th>Total</th></tr></thead><tbody>';
+  TNAMES.forEach(t=>{
+    const tot = THEMES[t].reduce((a,b)=>a+b,0);
+    h+=`<tr><td style="font-weight:600">${t}</td>`;
+    sortedIdx.forEach(i=>h+=THEMES[t][i]?'<td class="yes">&#10003;</td>':'<td class="no">&mdash;</td>');
+    h+=`<td style="text-align:center;font-weight:800">${tot}/12</td></tr>`;
+  });
+  h+='<tr style="background:var(--mid);color:#fff;font-weight:800"><td>Theme count ↑</td>';
+  sortedIdx.forEach(i=>h+=`<td style="text-align:center">${TNAMES.filter(t=>THEMES[t][i]).length}</td>`);
+  h+='<td></td></tr></tbody></table>';
+  document.getElementById('matrixWrap').innerHTML = h;
+}
+
+/* =====================================================
+   HELPER — quote card (uses index w for participant)
+===================================================== */
+function qCard(q){
+  return `<div class="qcard"><div class="qt">"${q.t}"</div><div class="by">${LABELS[q.w]} <span class="tag">${q.th}</span></div></div>`;
+}
+
+/* =====================================================
+   INIT
+===================================================== */
+window.addEventListener('DOMContentLoaded', ()=>{
+  buildOverview();
+  buildThemePills(); selectTheme(TNAMES[0]);
+  buildProfPills();  selectProf(0);
+  buildCompareSelects();
+  buildQuoteFilters();
+  buildMatrix();
+});
+</script>
+</body>
+</html>
