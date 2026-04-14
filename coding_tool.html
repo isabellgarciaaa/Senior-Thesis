@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qualitative Coding Tool — Isabel Garcia Thesis</title>
+<style>
+  :root {
+    --ocean-deep: #1a3a4a;
+    --ocean-mid: #2d6a7a;
+    --ocean-light: #5ba4b5;
+    --sand: #f5f0e8;
+    --sand-dark: #e8dfd0;
+    --foam: #ffffff;
+    --coral: #e07a5f;
+    --kelp: #4a7c59;
+    --sunset: #f2a65a;
+    --shell: #c4a882;
+    --text: #2c2c2c;
+    --text-light: #666;
+    --border: #d4cfc5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--sand);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    background: linear-gradient(135deg, var(--ocean-deep), var(--ocean-mid));
+    color: white;
+    padding: 1.2rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  header h1 { font-size: 1.3rem; font-weight: 600; }
+  header .subtitle { font-size: 0.85rem; opacity: 0.8; margin-top: 2px; }
+
+  .header-actions { display: flex; gap: 0.5rem; }
+  .header-actions button {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background 0.2s;
+  }
+  .header-actions button:hover { background: rgba(255,255,255,0.25); }
+
+  /* Navigation tabs */
+  .tabs {
+    display: flex;
+    background: var(--ocean-deep);
+    padding: 0 2rem;
+    gap: 0;
+  }
+  .tab {
+    padding: 0.7rem 1.2rem;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    font-size: 0.85rem;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab:hover { color: rgba(255,255,255,0.85); }
+  .tab.active { color: white; border-bottom-color: var(--sunset); font-weight: 600; }
+
+  /* Layout */
+  .app-container { display: flex; height: calc(100vh - 110px); }
+
+  /* Sidebar */
+  .sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: var(--foam);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-header {
+    padding: 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--sand);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sidebar-list { flex: 1; overflow-y: auto; }
+  .sidebar-item {
+    padding: 0.7rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f0ebe3;
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.15s;
+  }
+  .sidebar-item:hover { background: var(--sand); }
+  .sidebar-item.active { background: var(--sand-dark); font-weight: 600; }
+  .sidebar-item .badge {
+    background: var(--ocean-light);
+    color: white;
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  /* Main content */
+  .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Transcript view */
+  .transcript-area {
+    flex: 1;
+    padding: 1.5rem 2rem;
+    overflow-y: auto;
+    line-height: 1.8;
+    font-size: 0.95rem;
+  }
+  .transcript-area .empty-state {
+    text-align: center;
+    color: var(--text-light);
+    padding: 4rem 2rem;
+  }
+  .transcript-area .empty-state h3 { margin-bottom: 0.5rem; color: var(--ocean-mid); }
+
+  .transcript-text { position: relative; white-space: pre-wrap; word-wrap: break-word; }
+
+  /* Coded text highlights */
+  .coded-segment {
+    border-radius: 3px;
+    padding: 1px 2px;
+    cursor: pointer;
+    position: relative;
+    transition: filter 0.15s;
+  }
+  .coded-segment:hover { filter: brightness(0.9); }
+  .coded-segment.selected { outline: 2px solid var(--ocean-deep); }
+
+  /* Right panel */
+  .right-panel {
+    width: 320px;
+    min-width: 320px;
+    background: var(--foam);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-section {
+    border-bottom: 1px solid var(--border);
+    padding: 1rem;
+  }
+  .panel-section h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-light);
+    margin-bottom: 0.6rem;
+  }
+
+  /* Code chips */
+  .code-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    margin: 2px 3px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+  .code-chip:hover { filter: brightness(0.95); }
+  .code-chip .remove-code {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    cursor: pointer;
+    margin-left: 2px;
+  }
+  .code-chip .remove-code:hover { opacity: 1; }
+
+  /* Codebook panel */
+  .codebook-list { overflow-y: auto; flex: 1; }
+  .codebook-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #f0ebe3;
+    font-size: 0.85rem;
+    gap: 0.5rem;
+  }
+  .codebook-item .color-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .codebook-item .code-name { flex: 1; }
+  .codebook-item .code-count { color: var(--text-light); font-size: 0.8rem; }
+  .codebook-item .delete-code {
+    color: var(--coral);
+    cursor: pointer;
+    opacity: 0;
+    font-size: 0.8rem;
+    transition: opacity 0.15s;
+  }
+  .codebook-item:hover .delete-code { opacity: 1; }
+
+  /* Comments */
+  .comment-box {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem;
+    font-size: 0.85rem;
+    width: 100%;
+    min-height: 60px;
+    resize: vertical;
+    font-family: inherit;
+    margin-top: 0.4rem;
+  }
+  .comment-item {
+    background: var(--sand);
+    padding: 0.6rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    font-size: 0.83rem;
+  }
+  .comment-item .comment-meta {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .comment-item .comment-delete {
+    color: var(--coral);
+    cursor: pointer;
+    font-size: 0.75rem;
+  }
+  .comment-item .comment-codes {
+    margin-top: 4px;
+  }
+
+  /* Popup for coding selection */
+  .code-popup {
+    position: fixed;
+    background: var(--foam);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    padding: 0.8rem;
+    z-index: 1000;
+    min-width: 260px;
+    max-width: 340px;
+    display: none;
+  }
+  .code-popup h4 { font-size: 0.8rem; color: var(--text-light); margin-bottom: 0.5rem; }
+  .code-popup .code-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 0.5rem;
+  }
+  .code-popup .code-option {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+  .code-popup .code-option:hover { filter: brightness(0.9); }
+  .code-popup .code-option.selected { border-color: var(--ocean-deep); font-weight: 600; }
+  .code-popup .popup-comment {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.4rem;
+    font-size: 0.82rem;
+    font-family: inherit;
+    min-height: 40px;
+    resize: vertical;
+    margin-bottom: 0.5rem;
+  }
+  .code-popup .popup-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.4rem;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 0.35rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--foam);
+    transition: all 0.15s;
+  }
+  .btn:hover { background: var(--sand); }
+  .btn-primary {
+    background: var(--ocean-mid);
+    color: white;
+    border-color: var(--ocean-mid);
+  }
+  .btn-primary:hover { background: var(--ocean-deep); }
+  .btn-danger { color: var(--coral); }
+  .btn-small { padding: 0.25rem 0.6rem; font-size: 0.75rem; }
+
+  /* Add code input */
+  .add-code-row {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .add-code-row input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.82rem;
+    font-family: inherit;
+  }
+
+  /* Paste modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--foam);
+    border-radius: 12px;
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+  }
+  .modal h3 { margin-bottom: 1rem; color: var(--ocean-deep); }
+  .modal textarea {
+    width: 100%;
+    min-height: 250px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+    margin-bottom: 1rem;
+  }
+  .modal .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  /* All codes view */
+  .all-codes-view { padding: 1.5rem 2rem; overflow-y: auto; flex: 1; }
+  .all-codes-view h2 { color: var(--ocean-deep); margin-bottom: 1rem; font-size: 1.2rem; }
+  .code-group { margin-bottom: 1.5rem; }
+  .code-group-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--border);
+  }
+  .code-group-header .color-dot { width: 14px; height: 14px; border-radius: 50%; }
+  .code-group-header h3 { font-size: 1rem; }
+  .code-group-header .count { color: var(--text-light); font-size: 0.85rem; }
+  .excerpt-card {
+    background: var(--foam);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.88rem;
+  }
+  .excerpt-card .excerpt-source {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--ocean-mid);
+    margin-bottom: 4px;
+  }
+  .excerpt-card .excerpt-text {
+    line-height: 1.5;
+    color: var(--text);
+    border-left: 3px solid var(--border);
+    padding-left: 0.6rem;
+    margin: 0.4rem 0;
+  }
+  .excerpt-card .excerpt-comment {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    font-style: italic;
+    margin-top: 0.3rem;
+  }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--shell); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ocean-light); }
+
+  /* Hidden panels */
+  .view-hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Qualitative Coding Tool</h1>
+    <div class="subtitle">Invisible Barriers to Coastal Access — Isabel Garcia, UCSB ES Thesis</div>
+  </div>
+  <div class="header-actions">
+    <button onclick="exportData()">Export Data</button>
+    <button onclick="importDataPrompt()">Import Data</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-view="coding" onclick="switchView('coding')">Coding</div>
+  <div class="tab" data-view="codebook" onclick="switchView('codebook')">Codebook</div>
+  <div class="tab" data-view="allcodes" onclick="switchView('allcodes')">All Coded Passages</div>
+</div>
+
+<div class="app-container">
+  <!-- SIDEBAR: Interview list -->
+  <div class="sidebar" id="sidebar-coding">
+    <div class="sidebar-header">
+      Interviews
+      <button class="btn btn-small btn-primary" onclick="showAddInterviewModal()">+ Add</button>
+    </div>
+    <div class="sidebar-list" id="interview-list"></div>
+  </div>
+
+  <!-- SIDEBAR: Codebook list -->
+  <div class="sidebar view-hidden" id="sidebar-codebook">
+    <div class="sidebar-header">Codebook</div>
+    <div class="add-code-row">
+      <input type="text" id="new-code-input" placeholder="New code name..." onkeydown="if(event.key==='Enter') addNewCode()">
+      <button class="btn btn-small btn-primary" onclick="addNewCode()">Add</button>
+    </div>
+    <div class="codebook-list" id="codebook-list"></div>
+  </div>
+
+  <!-- SIDEBAR: All codes filter -->
+  <div class="sidebar view-hidden" id="sidebar-allcodes">
+    <div class="sidebar-header">Filter by Code</div>
+    <div class="sidebar-list" id="allcodes-filter-list"></div>
+  </div>
+
+  <!-- MAIN: Transcript view -->
+  <div class="main-content" id="main-coding">
+    <div class="transcript-area" id="transcript-area">
+      <div class="empty-state">
+        <h3>No interview selected</h3>
+        <p>Select an interview from the sidebar, or click <strong>+ Add</strong> to paste a new transcript.</p>
+        <p style="margin-top:1rem; font-size:0.85rem; color:var(--text-light)">
+          Tip: Open your .docx transcript, select all text (Cmd+A), copy (Cmd+C), then paste it here.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN: Codebook view -->
+  <div class="main-content view-hidden" id="main-codebook">
+    <div class="all-codes-view" id="codebook-detail-area">
+      <div class="empty-state" style="padding:4rem; text-align:center; color:var(--text-light);">
+        <h3 style="color:var(--ocean-mid)">Your Codebook</h3>
+        <p>Manage your codes in the sidebar. Click a code to see all passages tagged with it.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN: All coded passages -->
+  <div class="main-content view-hidden" id="main-allcodes">
+    <div class="all-codes-view" id="allcodes-area"></div>
+  </div>
+
+  <!-- RIGHT PANEL: Coding details -->
+  <div class="right-panel" id="right-coding">
+    <div class="panel-section">
+      <h3>Interview Comments</h3>
+      <div id="interview-comments-list"></div>
+      <textarea class="comment-box" id="interview-comment-box" placeholder="Add a comment about this interview..." onkeydown="if(event.key==='Enter' && event.metaKey) addInterviewComment()"></textarea>
+      <div style="margin-top:0.3rem; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.7rem; color:var(--text-light)">Cmd+Enter to save</span>
+        <button class="btn btn-small btn-primary" onclick="addInterviewComment()">Add Comment</button>
+      </div>
+    </div>
+    <div class="panel-section" style="flex:1; overflow-y:auto;">
+      <h3>Codes Applied in This Interview</h3>
+      <div id="interview-codes-summary"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: placeholder for other views -->
+  <div class="right-panel view-hidden" id="right-codebook" style="padding:1rem;">
+    <div class="panel-section">
+      <h3>Code Details</h3>
+      <p style="font-size:0.85rem; color:var(--text-light);">Select a code from the sidebar to view its details and all tagged passages.</p>
+    </div>
+  </div>
+  <div class="right-panel view-hidden" id="right-allcodes" style="padding:1rem;">
+    <div class="panel-section">
+      <h3>Summary</h3>
+      <div id="allcodes-summary"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Code popup (appears on text selection) -->
+<div class="code-popup" id="code-popup">
+  <h4>Apply Codes to Selection</h4>
+  <div class="code-options" id="popup-code-options"></div>
+  <textarea class="popup-comment" id="popup-comment" placeholder="Add a comment (optional)..."></textarea>
+  <div class="popup-actions">
+    <button class="btn" onclick="closePopup()">Cancel</button>
+    <button class="btn btn-primary" onclick="applyCodesFromPopup()">Apply</button>
+  </div>
+</div>
+
+<!-- Add Interview Modal -->
+<div class="modal-overlay" id="add-interview-modal">
+  <div class="modal">
+    <h3>Add Interview Transcript</h3>
+    <label style="font-size:0.85rem; display:block; margin-bottom:0.5rem;">
+      Participant Name:
+      <input type="text" id="new-interview-name" style="width:100%; padding:0.4rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem; margin-top:4px;" placeholder="e.g. ALEX">
+    </label>
+    <label style="font-size:0.85rem; display:block; margin-bottom:0.3rem;">
+      Paste transcript text below:
+    </label>
+    <textarea id="new-interview-text" placeholder="Open your .docx file, select all (Cmd+A), copy (Cmd+C), and paste here..."></textarea>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeAddInterviewModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewInterview()">Save Interview</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal">
+    <h3>Import Data</h3>
+    <p style="font-size:0.85rem; margin-bottom:1rem;">Paste your exported JSON data below:</p>
+    <textarea id="import-data-text" placeholder="Paste JSON here..."></textarea>
+    <div class="modal-actions">
+      <button class="btn" onclick="document.getElementById('import-modal').classList.remove('show')">Cancel</button>
+      <button class="btn btn-primary" onclick="importData()">Import</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="import-file-input" style="display:none" accept=".json">
+
+<script>
+// ============ DATA MODEL ============
+const CODE_COLORS = [
+  '#b8d4e3', '#f5cac3', '#c8e6c9', '#fff3cd', '#e1bee7',
+  '#ffccbc', '#b2dfdb', '#f0e68c', '#d1c4e9', '#ffecb3',
+  '#c5cae9', '#ffe0b2', '#b3e5fc', '#f8bbd0', '#dcedc8',
+  '#d7ccc8', '#cfd8dc', '#fce4ec', '#e0f2f1', '#fff9c4'
+];
+
+let data = {
+  interviews: [],
+  codes: [],
+  codedSegments: [],
+  interviewComments: [],
+  nextCodeId: 1,
+  nextSegmentId: 1,
+  nextCommentId: 1
+};
+
+let currentView = 'coding';
+let currentInterviewId = null;
+let pendingSelection = null;
+
+// ============ DEFAULT CODES (your 12 themes) ============
+const DEFAULT_CODES = [
+  'Beach as Mental Health Space',
+  'Family & Intergenerational Patterns',
+  'Beach as White-Coded Space',
+  'Wealth & Privilege Barriers',
+  'ICE / Immigration Fear',
+  'Time Poverty',
+  'Body Image Pressure',
+  'Feeling Watched / Out of Place',
+  'Safety Concerns',
+  'UCSB HSI Critique',
+  'Cultural Modesty Norms',
+  'Swimming Ability Gap'
+];
+
+// ============ INIT ============
+function init() {
+  const saved = localStorage.getItem('thesis_coding_data');
+  if (saved) {
+    try {
+      data = JSON.parse(saved);
+    } catch(e) {
+      console.error('Failed to load saved data', e);
+    }
+  }
+
+  // Add default codes if no codes exist
+  if (data.codes.length === 0) {
+    DEFAULT_CODES.forEach((name, i) => {
+      data.codes.push({
+        id: data.nextCodeId++,
+        name: name,
+        color: CODE_COLORS[i % CODE_COLORS.length]
+      });
+    });
+    save();
+  }
+
+  renderAll();
+  setupTextSelection();
+}
+
+function save() {
+  localStorage.setItem('thesis_coding_data', JSON.stringify(data));
+}
+
+// ============ VIEW SWITCHING ============
+function switchView(view) {
+  currentView = view;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+
+  ['coding', 'codebook', 'allcodes'].forEach(v => {
+    const show = v === view;
+    document.getElementById('sidebar-' + v).classList.toggle('view-hidden', !show);
+    document.getElementById('main-' + v).classList.toggle('view-hidden', !show);
+    document.getElementById('right-' + v).classList.toggle('view-hidden', !show);
+  });
+
+  if (view === 'allcodes') renderAllCodesView();
+  if (view === 'codebook') renderCodebook();
+}
+
+// ============ RENDER ============
+function renderAll() {
+  renderInterviewList();
+  renderTranscript();
+  renderCodebook();
+  renderInterviewComments();
+  renderInterviewCodesSummary();
+}
+
+function renderInterviewList() {
+  const list = document.getElementById('interview-list');
+  list.innerHTML = '';
+  data.interviews.forEach(iv => {
+    const segCount = data.codedSegments.filter(s => s.interviewId === iv.id).length;
+    const item = document.createElement('div');
+    item.className = 'sidebar-item' + (currentInterviewId === iv.id ? ' active' : '');
+    item.innerHTML = `
+      <span>${iv.name}</span>
+      ${segCount > 0 ? `<span class="badge">${segCount}</span>` : ''}
+    `;
+    item.onclick = () => { currentInterviewId = iv.id; renderAll(); };
+    list.appendChild(item);
+  });
+}
+
+function renderTranscript() {
+  const area = document.getElementById('transcript-area');
+  if (!currentInterviewId) {
+    area.innerHTML = `<div class="empty-state">
+      <h3>No interview selected</h3>
+      <p>Select an interview from the sidebar, or click <strong>+ Add</strong> to paste a new transcript.</p>
+      <p style="margin-top:1rem; font-size:0.85rem; color:var(--text-light)">
+        Tip: Open your .docx transcript, select all text (Cmd+A), copy (Cmd+C), then paste it here.
+      </p>
+    </div>`;
+    return;
+  }
+
+  const iv = data.interviews.find(i => i.id === currentInterviewId);
+  if (!iv) return;
+
+  const segments = data.codedSegments
+    .filter(s => s.interviewId === currentInterviewId)
+    .sort((a, b) => a.startOffset - b.startOffset);
+
+  const text = iv.text;
+  let html = '';
+  let lastIndex = 0;
+
+  // Build non-overlapping segments
+  const merged = mergeSegments(segments);
+
+  merged.forEach(m => {
+    if (m.startOffset > lastIndex) {
+      html += escapeHtml(text.substring(lastIndex, m.startOffset));
+    }
+    const codes = m.codeIds.map(cid => data.codes.find(c => c.id === cid)).filter(Boolean);
+    const bgColor = codes.length > 0 ? codes[0].color : '#ddd';
+    const title = codes.map(c => c.name).join(', ');
+    html += `<span class="coded-segment" data-segment-ids="${m.segmentIds.join(',')}" style="background:${bgColor}" title="${escapeHtml(title)}" onclick="showSegmentDetail(event, [${m.segmentIds.join(',')}])">${escapeHtml(text.substring(m.startOffset, m.endOffset))}</span>`;
+    lastIndex = m.endOffset;
+  });
+
+  if (lastIndex < text.length) {
+    html += escapeHtml(text.substring(lastIndex));
+  }
+
+  area.innerHTML = `<div class="transcript-text" id="transcript-text">${html}</div>`;
+}
+
+function mergeSegments(segments) {
+  if (segments.length === 0) return [];
+  const events = [];
+  segments.forEach(s => {
+    events.push({ pos: s.startOffset, type: 'start', seg: s });
+    events.push({ pos: s.endOffset, type: 'end', seg: s });
+  });
+  events.sort((a, b) => a.pos - b.pos || (a.type === 'end' ? -1 : 1));
+
+  const result = [];
+  let active = new Set();
+  let lastPos = null;
+
+  events.forEach(ev => {
+    if (lastPos !== null && ev.pos > lastPos && active.size > 0) {
+      const codeIds = [...new Set([...active].flatMap(s => s.codeIds))];
+      const segmentIds = [...active].map(s => s.id);
+      result.push({ startOffset: lastPos, endOffset: ev.pos, codeIds, segmentIds });
+    }
+    if (ev.type === 'start') active.add(ev.seg);
+    else active.delete(ev.seg);
+    lastPos = ev.pos;
+  });
+
+  return result;
+}
+
+function renderCodebook() {
+  const list = document.getElementById('codebook-list');
+  list.innerHTML = '';
+  data.codes.forEach(code => {
+    const count = data.codedSegments.filter(s => s.codeIds.includes(code.id)).length;
+    const item = document.createElement('div');
+    item.className = 'codebook-item';
+    item.innerHTML = `
+      <span class="color-dot" style="background:${code.color}"></span>
+      <span class="code-name">${escapeHtml(code.name)}</span>
+      <span class="code-count">${count}</span>
+      <span class="delete-code" onclick="deleteCode(${code.id})" title="Delete code">&times;</span>
+    `;
+    item.querySelector('.code-name').onclick = () => showCodeDetail(code.id);
+    list.appendChild(item);
+  });
+
+  // Also render filter list for allcodes view
+  const filterList = document.getElementById('allcodes-filter-list');
+  filterList.innerHTML = `<div class="sidebar-item active" onclick="renderAllCodesView(null)"><span>All Codes</span></div>`;
+  data.codes.forEach(code => {
+    const count = data.codedSegments.filter(s => s.codeIds.includes(code.id)).length;
+    if (count === 0) return;
+    const item = document.createElement('div');
+    item.className = 'sidebar-item';
+    item.innerHTML = `<span>${escapeHtml(code.name)}</span><span class="badge">${count}</span>`;
+    item.onclick = () => renderAllCodesView(code.id);
+    filterList.appendChild(item);
+  });
+}
+
+function renderInterviewComments() {
+  const list = document.getElementById('interview-comments-list');
+  if (!currentInterviewId) { list.innerHTML = ''; return; }
+  const comments = data.interviewComments.filter(c => c.interviewId === currentInterviewId);
+  list.innerHTML = '';
+  comments.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'comment-item';
+    div.innerHTML = `
+      <div class="comment-meta">
+        <span>${new Date(c.createdAt).toLocaleDateString()}</span>
+        <span class="comment-delete" onclick="deleteInterviewComment(${c.id})">&times;</span>
+      </div>
+      <div>${escapeHtml(c.text)}</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function renderInterviewCodesSummary() {
+  const el = document.getElementById('interview-codes-summary');
+  if (!currentInterviewId) { el.innerHTML = ''; return; }
+  const segments = data.codedSegments.filter(s => s.interviewId === currentInterviewId);
+  const codeCountMap = {};
+  segments.forEach(s => {
+    s.codeIds.forEach(cid => {
+      codeCountMap[cid] = (codeCountMap[cid] || 0) + 1;
+    });
+  });
+
+  const entries = Object.entries(codeCountMap).sort((a, b) => b[1] - a[1]);
+  if (entries.length === 0) {
+    el.innerHTML = '<p style="font-size:0.85rem; color:var(--text-light);">No codes applied yet. Select text in the transcript to start coding.</p>';
+    return;
+  }
+
+  el.innerHTML = entries.map(([cid, count]) => {
+    const code = data.codes.find(c => c.id === Number(cid));
+    if (!code) return '';
+    return `<span class="code-chip" style="background:${code.color}">${escapeHtml(code.name)} (${count})</span>`;
+  }).join('');
+}
+
+// ============ ALL CODES VIEW ============
+function renderAllCodesView(filterCodeId) {
+  const area = document.getElementById('allcodes-area');
+  const summary = document.getElementById('allcodes-summary');
+
+  const codesToShow = filterCodeId
+    ? data.codes.filter(c => c.id === filterCodeId)
+    : data.codes.filter(c => data.codedSegments.some(s => s.codeIds.includes(c.id)));
+
+  let totalSegments = 0;
+  let html = '<h2>All Coded Passages</h2>';
+
+  codesToShow.forEach(code => {
+    const segments = data.codedSegments.filter(s => s.codeIds.includes(code.id));
+    if (segments.length === 0) return;
+    totalSegments += segments.length;
+
+    html += `<div class="code-group">
+      <div class="code-group-header">
+        <span class="color-dot" style="background:${code.color}"></span>
+        <h3>${escapeHtml(code.name)}</h3>
+        <span class="count">(${segments.length} passage${segments.length !== 1 ? 's' : ''})</span>
+      </div>`;
+
+    segments.forEach(seg => {
+      const iv = data.interviews.find(i => i.id === seg.interviewId);
+      const text = iv ? iv.text.substring(seg.startOffset, seg.endOffset) : '(text unavailable)';
+      html += `<div class="excerpt-card">
+        <div class="excerpt-source">${iv ? escapeHtml(iv.name) : 'Unknown'}</div>
+        <div class="excerpt-text">${escapeHtml(text)}</div>
+        ${seg.comment ? `<div class="excerpt-comment">"${escapeHtml(seg.comment)}"</div>` : ''}
+      </div>`;
+    });
+
+    html += '</div>';
+  });
+
+  if (totalSegments === 0) {
+    html += '<p style="color:var(--text-light);">No coded passages yet. Go to the Coding tab to start.</p>';
+  }
+
+  area.innerHTML = html;
+  summary.innerHTML = `<p style="font-size:0.85rem;">${totalSegments} total passages across ${codesToShow.length} codes</p>`;
+}
+
+// ============ TEXT SELECTION & CODING ============
+function setupTextSelection() {
+  document.addEventListener('mouseup', (e) => {
+    if (!currentInterviewId || currentView !== 'coding') return;
+    if (e.target.closest('#code-popup')) return;
+
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.toString().trim()) {
+      return;
+    }
+
+    const transcriptEl = document.getElementById('transcript-text');
+    if (!transcriptEl || !transcriptEl.contains(sel.anchorNode)) return;
+
+    // Calculate offset in original text
+    const range = sel.getRangeAt(0);
+    const offsets = getTextOffsets(transcriptEl, range);
+    if (offsets.start === offsets.end) return;
+
+    pendingSelection = {
+      interviewId: currentInterviewId,
+      startOffset: offsets.start,
+      endOffset: offsets.end,
+      text: sel.toString()
+    };
+
+    showCodePopup(e.clientX, e.clientY);
+  });
+
+  // Close popup on click outside
+  document.addEventListener('mousedown', (e) => {
+    const popup = document.getElementById('code-popup');
+    if (popup.style.display !== 'none' && !popup.contains(e.target)) {
+      closePopup();
+    }
+  });
+}
+
+function getTextOffsets(container, range) {
+  const treeWalker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+  let charCount = 0;
+  let startOffset = 0;
+  let endOffset = 0;
+  let node;
+
+  while (node = treeWalker.nextNode()) {
+    if (node === range.startContainer) {
+      startOffset = charCount + range.startOffset;
+    }
+    if (node === range.endContainer) {
+      endOffset = charCount + range.endOffset;
+      break;
+    }
+    charCount += node.textContent.length;
+  }
+
+  return { start: startOffset, end: endOffset };
+}
+
+function showCodePopup(x, y) {
+  const popup = document.getElementById('code-popup');
+  const opts = document.getElementById('popup-code-options');
+
+  opts.innerHTML = data.codes.map(c =>
+    `<span class="code-option" data-code-id="${c.id}" style="background:${c.color}" onclick="this.classList.toggle('selected')">${escapeHtml(c.name)}</span>`
+  ).join('');
+
+  document.getElementById('popup-comment').value = '';
+
+  // Position popup
+  popup.style.display = 'block';
+  const rect = popup.getBoundingClientRect();
+  let left = x + 10;
+  let top = y + 10;
+  if (left + rect.width > window.innerWidth) left = window.innerWidth - rect.width - 20;
+  if (top + rect.height > window.innerHeight) top = window.innerHeight - rect.height - 20;
+  popup.style.left = left + 'px';
+  popup.style.top = top + 'px';
+}
+
+function closePopup() {
+  document.getElementById('code-popup').style.display = 'none';
+  pendingSelection = null;
+  window.getSelection().removeAllRanges();
+}
+
+function applyCodesFromPopup() {
+  if (!pendingSelection) return;
+
+  const selectedCodeIds = [...document.querySelectorAll('#popup-code-options .code-option.selected')]
+    .map(el => Number(el.dataset.codeId));
+
+  if (selectedCodeIds.length === 0) {
+    alert('Please select at least one code.');
+    return;
+  }
+
+  const comment = document.getElementById('popup-comment').value.trim();
+
+  const segment = {
+    id: data.nextSegmentId++,
+    interviewId: pendingSelection.interviewId,
+    startOffset: pendingSelection.startOffset,
+    endOffset: pendingSelection.endOffset,
+    codeIds: selectedCodeIds,
+    comment: comment,
+    createdAt: new Date().toISOString()
+  };
+
+  data.codedSegments.push(segment);
+  save();
+  closePopup();
+  renderAll();
+}
+
+// ============ SEGMENT DETAIL (click on coded text) ============
+function showSegmentDetail(e, segmentIds) {
+  e.stopPropagation();
+  const segments = segmentIds.map(id => data.codedSegments.find(s => s.id === id)).filter(Boolean);
+  if (segments.length === 0) return;
+
+  // Show info about these segments — reuse the popup
+  const seg = segments[0];
+  const iv = data.interviews.find(i => i.id === seg.interviewId);
+  const text = iv ? iv.text.substring(seg.startOffset, seg.endOffset) : '';
+
+  const allCodes = [...new Set(segments.flatMap(s => s.codeIds))];
+  const codeNames = allCodes.map(cid => {
+    const c = data.codes.find(c => c.id === cid);
+    return c ? c.name : '?';
+  });
+
+  const msg = `Codes: ${codeNames.join(', ')}${seg.comment ? '\n\nComment: ' + seg.comment : ''}\n\nRemove this coding?`;
+  if (confirm(msg)) {
+    data.codedSegments = data.codedSegments.filter(s => !segmentIds.includes(s.id));
+    save();
+    renderAll();
+  }
+}
+
+// ============ INTERVIEWS ============
+function showAddInterviewModal() {
+  document.getElementById('add-interview-modal').classList.add('show');
+  document.getElementById('new-interview-name').value = '';
+  document.getElementById('new-interview-text').value = '';
+  document.getElementById('new-interview-name').focus();
+}
+
+function closeAddInterviewModal() {
+  document.getElementById('add-interview-modal').classList.remove('show');
+}
+
+function saveNewInterview() {
+  const name = document.getElementById('new-interview-name').value.trim();
+  const text = document.getElementById('new-interview-text').value;
+
+  if (!name) { alert('Please enter a participant name.'); return; }
+  if (!text.trim()) { alert('Please paste the transcript text.'); return; }
+
+  const id = Date.now();
+  data.interviews.push({ id, name, text });
+  save();
+  currentInterviewId = id;
+  closeAddInterviewModal();
+  renderAll();
+}
+
+// ============ CODES ============
+function addNewCode() {
+  const input = document.getElementById('new-code-input');
+  const name = input.value.trim();
+  if (!name) return;
+  if (data.codes.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+    alert('A code with this name already exists.');
+    return;
+  }
+  const color = CODE_COLORS[data.codes.length % CODE_COLORS.length];
+  data.codes.push({ id: data.nextCodeId++, name, color });
+  input.value = '';
+  save();
+  renderCodebook();
+}
+
+function deleteCode(codeId) {
+  const code = data.codes.find(c => c.id === codeId);
+  if (!code) return;
+  if (!confirm(`Delete code "${code.name}"? This will remove it from all coded passages.`)) return;
+
+  // Remove code from segments
+  data.codedSegments.forEach(s => {
+    s.codeIds = s.codeIds.filter(id => id !== codeId);
+  });
+  // Remove segments with no codes
+  data.codedSegments = data.codedSegments.filter(s => s.codeIds.length > 0);
+  data.codes = data.codes.filter(c => c.id !== codeId);
+  save();
+  renderAll();
+}
+
+function showCodeDetail(codeId) {
+  const code = data.codes.find(c => c.id === codeId);
+  if (!code) return;
+
+  const area = document.getElementById('codebook-detail-area');
+  const segments = data.codedSegments.filter(s => s.codeIds.includes(codeId));
+
+  let html = `<h2 style="display:flex;align-items:center;gap:0.5rem;">
+    <span class="color-dot" style="background:${code.color};width:16px;height:16px;border-radius:50%;display:inline-block;"></span>
+    ${escapeHtml(code.name)}
+  </h2>
+  <p style="color:var(--text-light);margin:0.5rem 0 1rem;">${segments.length} passage${segments.length !== 1 ? 's' : ''} coded</p>`;
+
+  segments.forEach(seg => {
+    const iv = data.interviews.find(i => i.id === seg.interviewId);
+    const text = iv ? iv.text.substring(seg.startOffset, seg.endOffset) : '(text unavailable)';
+    html += `<div class="excerpt-card">
+      <div class="excerpt-source">${iv ? escapeHtml(iv.name) : 'Unknown'}</div>
+      <div class="excerpt-text">${escapeHtml(text)}</div>
+      ${seg.comment ? `<div class="excerpt-comment">"${escapeHtml(seg.comment)}"</div>` : ''}
+    </div>`;
+  });
+
+  area.innerHTML = html;
+}
+
+// ============ INTERVIEW COMMENTS ============
+function addInterviewComment() {
+  if (!currentInterviewId) return;
+  const box = document.getElementById('interview-comment-box');
+  const text = box.value.trim();
+  if (!text) return;
+
+  data.interviewComments.push({
+    id: data.nextCommentId++,
+    interviewId: currentInterviewId,
+    text,
+    createdAt: new Date().toISOString()
+  });
+  box.value = '';
+  save();
+  renderInterviewComments();
+}
+
+function deleteInterviewComment(id) {
+  data.interviewComments = data.interviewComments.filter(c => c.id !== id);
+  save();
+  renderInterviewComments();
+}
+
+// ============ EXPORT / IMPORT ============
+function exportData() {
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'thesis_coding_data_' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importDataPrompt() {
+  document.getElementById('import-modal').classList.add('show');
+  document.getElementById('import-data-text').value = '';
+}
+
+function importData() {
+  const text = document.getElementById('import-data-text').value.trim();
+  if (!text) return;
+  try {
+    const imported = JSON.parse(text);
+    if (!imported.interviews || !imported.codes) throw new Error('Invalid data format');
+    data = imported;
+    save();
+    document.getElementById('import-modal').classList.remove('show');
+    renderAll();
+    alert('Data imported successfully!');
+  } catch(e) {
+    alert('Error importing data: ' + e.message);
+  }
+}
+
+// ============ UTILS ============
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ============ START ============
+init();
+</script>
+</body>
+</html>
