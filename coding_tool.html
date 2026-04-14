@@ -606,20 +606,95 @@ let currentView = 'coding';
 let currentInterviewId = null;
 let pendingSelection = null;
 
-// ============ DEFAULT CODES (your 12 themes) ============
+// ============ 15 THEMES ============
 const DEFAULT_CODES = [
-  'Beach as Mental Health Space',
-  'Family & Intergenerational Patterns',
   'Beach as White-Coded Space',
-  'Wealth & Privilege Barriers',
-  'ICE / Immigration Fear',
-  'Time Poverty',
-  'Body Image Pressure',
-  'Feeling Watched / Out of Place',
-  'Safety Concerns',
-  'UCSB HSI Critique',
+  'Beach Tied to Wealth/Privilege',
+  'Time Poverty as Barrier',
+  'ICE/Immigration Fear',
+  'Beach as Mental Health/Reflection',
+  'Lack of Swimming Ability',
+  'Body Image/Appearance Pressure',
+  'Safety/Lighting/Gender',
+  'Family/Intergenerational Patterns',
+  'Feeling Watched/Out of Place',
   'Cultural Modesty Norms',
-  'Swimming Ability Gap'
+  'Beach as Luxury (Growing Up)',
+  'Party Culture as Barrier',
+  'UCSB HSI Critique',
+  'Representation Matters'
+];
+
+// ============ PRE-LOADED CODED QUOTES ============
+const PRELOADED_QUOTES = [
+  {t:"I felt ashamed of being there because there weren't many people of color.",w:6,th:"Beach as White-Coded Space"},
+  {t:"I think just looking at my environment made me feel intimidated about actually going to the beach.",w:6,th:"Beach as White-Coded Space"},
+  {t:"I'd have to put on a mask to be similar to them so I wouldn't feel embarrassed about my identity.",w:6,th:"Feeling Watched/Out of Place"},
+  {t:"Being more myself would look like wearing shorts and a random T-shirt... I'd probably speak Spanish too because talking in Spanish is way funnier.",w:6,th:"Cultural Modesty Norms"},
+  {t:"I can literally see the pool from my dorm window, and it's just straight-up white people.",w:6,th:"Beach as White-Coded Space"},
+  {t:"When it was the first time I got into a pool, it was when nobody was there — just me and my friends.",w:6,th:"Representation Matters"},
+  {t:"The ocean doesn't judge anyone.",w:7,th:"Beach as Mental Health/Reflection"},
+  {t:"I feel like the ocean holds so many secrets and stories.",w:7,th:"Beach as Mental Health/Reflection"},
+  {t:"I would consider it sacred for sure.",w:7,th:"Beach as Mental Health/Reflection"},
+  {t:"I express a lot of my gratitude through tears... I go to the beach and cry everything out.",w:7,th:"Beach as Mental Health/Reflection"},
+  {t:"If I don't feel content with the level of productivity I've done so far, I feel like I don't deserve to go to the beach.",w:7,th:"Time Poverty as Barrier"},
+  {t:"We don't even go to Walmart anymore.",w:5,th:"ICE/Immigration Fear"},
+  {t:"We came across this white car, green stripes, and we didn't say anything. My mom and I — we just saw it. It was just an agriculture card. But just the colors gave us fear.",w:5,th:"ICE/Immigration Fear"},
+  {t:"None of us know how to swim. We would only go waist deep.",w:5,th:"Lack of Swimming Ability"},
+  {t:"I go when I'm sad... like when I fail a midterm.",w:5,th:"Beach as Mental Health/Reflection"},
+  {t:"Here it's very different... kind of lonely. A lot of people don't take advantage of it, including myself.",w:5,th:"Beach as Luxury (Growing Up)"},
+  {t:"I thought I'd go every weekend... that didn't happen.",w:5,th:"Time Poverty as Barrier"},
+  {t:"I don't feel comfortable wearing a bikini. It's always like shorts, some sandals, and a little top. And that's just so normalized.",w:5,th:"Cultural Modesty Norms"},
+  {t:"Getting connected to the beach is a big thing, but you have to have money, and you also have to look a certain way.",w:2,th:"Beach Tied to Wealth/Privilege"},
+  {t:"You start believing that those public spaces are places you don't belong in.",w:2,th:"Feeling Watched/Out of Place"},
+  {t:"This stuff is never discussed.",w:2,th:"Feeling Watched/Out of Place"},
+  {t:"This is not made for a Latina mom.",w:2,th:"Beach as White-Coded Space"},
+  {t:"They can say that they are, but they're not. You know who makes it a Hispanic-Serving Institution? The students.",w:2,th:"UCSB HSI Critique"},
+  {t:"Two meetings that helped me stay sober during the pandemic were at the beach.",w:2,th:"Beach as Mental Health/Reflection"},
+  {t:"I ask the beach, can I be here today?",w:2,th:"Beach as Mental Health/Reflection"},
+  {t:"When my other boys tried to integrate into that Santa Barbara surfing culture, they don't feel welcomed.",w:2,th:"Beach as White-Coded Space"},
+  {t:"There's no lighting. It becomes dangerous ground, a predatory environment.",w:2,th:"Safety/Lighting/Gender"},
+  {t:"We kind of isolated ourselves from doing stuff we used to do just for our safety.",w:1,th:"ICE/Immigration Fear"},
+  {t:"If I went alone, I'd probably want it to be empty because I don't want to seem weird being alone at the beach.",w:1,th:"Feeling Watched/Out of Place"},
+  {t:"There were houses near the beach, so you definitely expected richer people and more white people.",w:1,th:"Beach Tied to Wealth/Privilege"},
+  {t:"Huntington Beach... my mom told me most of the people over there are racist.",w:1,th:"Beach as White-Coded Space"},
+  {t:"If you don't have the time to even relax and be on your phone, you're not going to have time to go to the beach.",w:0,th:"Time Poverty as Barrier"},
+  {t:"I have three jobs and I'm also applying for a fourth. Not because I just want it, but because I need it.",w:0,th:"Time Poverty as Barrier"},
+  {t:"I don't tend to see that many Black or Asian people, or more visibly Indigenous Hispanics there.",w:0,th:"Beach as White-Coded Space"},
+  {t:"I've been called slurs... I've had things thrown at me. You'd be surprised what goes on on those streets.",w:0,th:"Feeling Watched/Out of Place"},
+  {t:"Everyone feels they need to look a certain way, so they try to look that way, but that contributes to the problem.",w:0,th:"Body Image/Appearance Pressure"},
+  {t:"We're all connected through the ocean.",w:0,th:"Beach as Mental Health/Reflection"},
+  {t:"The beach reminds me that things that once felt impossible can become real.",w:8,th:"Beach as Mental Health/Reflection"},
+  {t:"It feels like walking on eggshells. Like, you can use the space, but you're being watched.",w:8,th:"Feeling Watched/Out of Place"},
+  {t:"My family left Mexico to feel safer, and now it doesn't feel safe here either.",w:8,th:"ICE/Immigration Fear"},
+  {t:"When I'm alone, it's like free therapy.",w:8,th:"Beach as Mental Health/Reflection"},
+  {t:"Growing up, it felt like a luxury. Now it feels like a calm space that I'm privileged to be near.",w:8,th:"Beach as Luxury (Growing Up)"},
+  {t:"In my family, our bathing suit was basically shorts and a baggy T-shirt. That was the bikini.",w:3,th:"Cultural Modesty Norms"},
+  {t:"I expected it to be predominantly white because beach areas tend to be richer areas. So my expectations were low.",w:3,th:"Beach Tied to Wealth/Privilege"},
+  {t:"Being an HSI doesn't really mean anything to them because they don't actually do anything to help us.",w:3,th:"UCSB HSI Critique"},
+  {t:"The campus has not really done anything to protect us or notify us when ICE is present.",w:3,th:"ICE/Immigration Fear"},
+  {t:"As a young woman running alone, that's one of the biggest hazards I think about.",w:3,th:"Safety/Lighting/Gender"},
+  {t:"I always associated the beach with people who are in the middle class or wealthier.",w:11,th:"Beach Tied to Wealth/Privilege"},
+  {t:"I don't know how white people do it. They just get in and out with chanclas.",w:11,th:"Beach as White-Coded Space"},
+  {t:"The beach reminds me of how far I've come. My brown, first-gen self is here.",w:11,th:"Beach as Mental Health/Reflection"},
+  {t:"My mom says the beaches here are not the same as in Mexico.",w:11,th:"Family/Intergenerational Patterns"},
+  {t:"I was sitting on the wet sand and a big wave came and pulled me in... my dad pulled me out.",w:11,th:"Lack of Swimming Ability"},
+  {t:"It was really rare and it was like a big deal... like a flex.",w:10,th:"Beach as Luxury (Growing Up)"},
+  {t:"I wouldn't really see Latino families... it was often white families with a completely different lifestyle.",w:10,th:"Beach as White-Coded Space"},
+  {t:"I didn't really wear bathing suits growing up. Now everyone wears them.",w:10,th:"Body Image/Appearance Pressure"},
+  {t:"Their relationship to the beach was completely different from mine.",w:10,th:"Beach as Luxury (Growing Up)"},
+  {t:"My name is connected to water — it means the foam you see on the waves.",w:4,th:"Family/Intergenerational Patterns"},
+  {t:"Sometimes I feel like I have to be into surfing to fully enjoy the beaches here.",w:4,th:"Beach as White-Coded Space"},
+  {t:"Looking at the ocean makes me think that even though my problem feels really big, it's actually not that big.",w:9,th:"Beach as Mental Health/Reflection"},
+  {t:"He's shared with me how unsafe he feels in public spaces because of the administration targeting Latino individuals.",w:9,th:"ICE/Immigration Fear"},
+  {t:"My dad was really scared and wouldn't go out. My mom pushes herself because she's the one working.",w:6,th:"ICE/Immigration Fear"},
+  {t:"The resources exist, but they're very hidden.",w:6,th:"UCSB HSI Critique"},
+];
+
+const PARTICIPANT_LABELS = [
+  'Participant 1','Participant 2','Participant 3','Participant 4',
+  'Participant 5','Participant 6','Participant 7','Participant 8',
+  'Participant 9','Participant 10','Participant 11','Participant 12'
 ];
 
 // ============ INIT ============
@@ -642,9 +717,34 @@ function init() {
         color: CODE_COLORS[i % CODE_COLORS.length]
       });
     });
-    save();
   }
 
+  // Pre-load interviews and coded segments if empty
+  if (data.interviews.length === 0 && data.codedSegments.length === 0) {
+    // Create interview entries for each participant
+    PARTICIPANT_LABELS.forEach((label, i) => {
+      data.interviews.push({ id: i + 1, name: label, text: '' });
+    });
+    data.nextCodeId = data.codes.length + 1;
+
+    // Load coded quotes as segments
+    PRELOADED_QUOTES.forEach(q => {
+      const codeObj = data.codes.find(c => c.name === q.th);
+      if (codeObj) {
+        data.codedSegments.push({
+          id: data.nextSegmentId++,
+          interviewId: q.w + 1,
+          codeIds: [codeObj.id],
+          startOffset: 0,
+          endOffset: q.t.length,
+          text: q.t,
+          comment: ''
+        });
+      }
+    });
+  }
+
+  save();
   renderAll();
   setupTextSelection();
 }
