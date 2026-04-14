@@ -699,7 +699,7 @@ const PARTICIPANT_LABELS = [
 
 // ============ INIT ============
 function init() {
-  const saved = localStorage.getItem('thesis_coding_data');
+  const saved = localStorage.getItem('thesis_coding_v2');
   if (saved) {
     try {
       data = JSON.parse(saved);
@@ -750,7 +750,7 @@ function init() {
 }
 
 function save() {
-  localStorage.setItem('thesis_coding_data', JSON.stringify(data));
+  localStorage.setItem('thesis_coding_v2', JSON.stringify(data));
 }
 
 // ============ VIEW SWITCHING ============
@@ -1241,7 +1241,7 @@ function exportData() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'thesis_coding_data_' + new Date().toISOString().slice(0, 10) + '.json';
+  a.download = 'thesis_coding_v2_' + new Date().toISOString().slice(0, 10) + '.json';
   a.click();
   URL.revokeObjectURL(url);
 }
